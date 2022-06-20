@@ -1,4 +1,5 @@
 import express from 'express';
+import { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
@@ -14,22 +15,22 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   app.use(bodyParser.json());
 
   // @TODO1 IMPLEMENT A RESTFUL ENDPOINT
-  // GET /filteredimage?image_url={{URL}}
-  // endpoint to filter an image from a public url.
-  // IT SHOULD
-  //    1
-  //    1. validate the image_url query
-  //    2. call filterImageFromURL(image_url) to filter the image
-  //    3. send the resulting file in the response
-  //    4. deletes any files on the server on finish of the response
-  // QUERY PARAMATERS
-  //    image_url: URL of a publicly accessible image
-  // RETURNS
-  //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
+  app.get("/filteredimage/", async (req: Request, res: Response) =>{
+    try{
+      let image_url =  req.query.image_url;
 
-  /**************************************************************************** */
-
-  //! END @TODO1
+      if (!image_url) {
+        res.status(400).send("Bad Request.");
+        return;
+      }
+      let imageFile = await filterImageFromURL(image_url);
+      res.status(200).sendFile(imageFile);
+      res.on("finish", () => deleteLocalFiles([imageFile]));
+    }
+    catch {
+      return res.status(422).send('please check image url and try again');
+    }
+    })
   
   // Root Endpoint
   // Displays a simple message to the user
